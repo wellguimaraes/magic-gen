@@ -1,11 +1,12 @@
 const inquirer = require('inquirer')
-const pathToRegexp = require('path-to-regexp')
+const { pathToRegexp, compile } = require('path-to-regexp')
 const path = require('path')
 const fs = require('fs-extra')
 const { lowerCase } = require('lodash')
 const prettier = require('prettier')
 
 const rootPath = path.resolve(process.cwd())
+const otherLabel = 'OTHER (create new)'
 
 async function extractVariables(pathPattern) {
   const keys = []
@@ -14,7 +15,7 @@ async function extractVariables(pathPattern) {
   const pathVars = {}
 
   for (let key of keys) {
-    const relativePath = pathToRegexp.compile(pathPattern.split(`:${key.name}`)[0])(pathVars)
+    const relativePath = compile(pathPattern.split(`:${key.name}`)[0])(pathVars)
     const fullPath = path.resolve(rootPath, relativePath)
 
     const shouldBeNew = key.name.startsWith('new')
@@ -30,15 +31,27 @@ async function extractVariables(pathPattern) {
         : isValidName || `Please enter a valid ${humanizedKeyName} name!`
     }
 
-    const { variable } = await inquirer.prompt([
+    let { variable } = await inquirer.prompt([
       {
         type: !shouldBeNew && fs.existsSync(fullPath) ? 'list' : 'input',
         name: 'variable',
         message: `Which ${humanizedKeyName}?`,
-        choices,
+        choices: choices ? [...choices, otherLabel] : [],
         validate,
       },
     ])
+
+    if (variable === otherLabel) {
+      const answers = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'variable',
+          message: `What's should be the name of the new ${humanizedKeyName}?`,
+          validate,
+        },
+      ])
+      variable = answers.variable
+    }
 
     pathVars[key.name] = variable
   }
@@ -54,7 +67,7 @@ async function runGenerator(config) {
       let chosenKind = Object.keys(q.choices)[0]
 
       if (Object.keys(q.choices).length > 1) {
-        const { kind } = await inquirer.prompt([
+        let { kind } = await inquirer.prompt([
           {
             type: 'list',
             name: 'kind',
@@ -71,7 +84,7 @@ async function runGenerator(config) {
 
       context[q.name] = {
         ...pathVariables,
-        interpolated: path.resolve(rootPath, pathToRegexp.compile(chosenPathPattern)(pathVariables)),
+        interpolated: path.resolve(rootPath, compile(chosenPathPattern)(pathVariables)),
       }
     } else {
       const answer = await inquirer.prompt([q])
@@ -93,9 +106,8 @@ async function runGenerator(config) {
   })
 }
 
-exports.runGenerators = async (generatorsConfig) => {
-  if (Object.keys(generatorsConfig).length === 1)
-    return runGenerator(Object.values(generatorsConfig)[0])
+exports.runGenerators = async generatorsConfig => {
+  if (Object.keys(generatorsConfig).length === 1) return runGenerator(Object.values(generatorsConfig)[0])
 
   const { generatorName } = await inquirer.prompt([
     {
