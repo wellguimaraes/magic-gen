@@ -1,0 +1,36 @@
+{
+  "name": "magic-gen",
+  "version": "0.0.2",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wellguimaraes/magic-gen.git"
+  },
+  "keywords": [
+    "generator",
+    "templates"
+  ],
+  "author": "wellguimaraes@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wellguimaraes/magic-gen/issues"
+  },
+  "homepage": "https://github.com/wellguimaraes/magic-gen#readme",
+  "dependencies": {
+    "@types/fs-extra": "^8.0.1",
+    "@types/inquirer": "^6.5.0",
+    "@types/lodash": "^4.14.149",
+    "@types/node": "^13.7.0",
+    "@types/path-to-regexp": "^1.7.0",
+    "@types/prettier": "^1.19.0",
+    "fs-extra": "^8.1.0",
+    "inquirer": "^7.0.4",
+    "lodash": "^4.17.15",
+    "path-to-regexp": "^6.1.0",
+    "prettier": "^1.19.1"
+  }
+}
