@@ -59,13 +59,19 @@ async function extractVariables(pathPattern) {
   return pathVars
 }
 
+/**
+ *
+ * @param {{questions: {type: string, choices: *, name: string}[], files: *[], validate: Function}} config
+ * @returns {Promise<void>}
+ */
 async function runGenerator(config) {
   const context = {}
 
   for (let q of config.questions) {
     if (q.type === 'path') {
-      let chosenKind = Object.keys(q.choices)[0]
+      let chosenKind
 
+      // if there's just one option, skip this
       if (Object.keys(q.choices).length > 1) {
         let { kind } = await inquirer.prompt([
           {
@@ -79,12 +85,22 @@ async function runGenerator(config) {
         chosenKind = kind
       }
 
-      let chosenPathPattern = q.choices[chosenKind]
-      let pathVariables = await extractVariables(chosenPathPattern)
+      let pathVariables
+      let interpolatedPath
+      let chosenPathPattern = q.choices[chosenKind || Object.keys(q.choices)[0]]
 
+      let isValid = false
+
+      while (!isValid) {
+        pathVariables = await extractVariables(chosenPathPattern)
+        interpolatedPath = path.resolve(rootPath, compile(chosenPathPattern)(pathVariables))
+        isValid = !config.validate || config.validate()
+      }
+
+      // noinspection JSUnusedAssignment
       context[q.name] = {
         ...pathVariables,
-        interpolated: path.resolve(rootPath, compile(chosenPathPattern)(pathVariables)),
+        interpolated: interpolatedPath,
       }
     } else {
       const answer = await inquirer.prompt([q])
