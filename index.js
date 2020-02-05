@@ -94,7 +94,12 @@ async function runGenerator(config) {
       while (!isValid) {
         pathVariables = await extractVariables(chosenPathPattern)
         interpolatedPath = path.resolve(rootPath, compile(chosenPathPattern)(pathVariables))
-        isValid = !config.validate || config.validate()
+        isValid =
+          !config.validate ||
+          config.validate({
+            ...pathVariables,
+            interpolated: interpolatedPath,
+          })
       }
 
       // noinspection JSUnusedAssignment
