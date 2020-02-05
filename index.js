@@ -89,17 +89,19 @@ async function runGenerator(config) {
       let interpolatedPath
       let chosenPathPattern = q.choices[chosenKind || Object.keys(q.choices)[0]]
 
-      let isValid = false
-
-      while (!isValid) {
+      while (true) {
         pathVariables = await extractVariables(chosenPathPattern)
         interpolatedPath = path.resolve(rootPath, compile(chosenPathPattern)(pathVariables))
-        isValid =
+
+        const validationResult =
           !config.validate ||
           config.validate({
             ...pathVariables,
             interpolated: interpolatedPath,
           })
+
+        if (typeof validationResult === 'string') console.log(validationResult)
+        if (validationResult === true) break
       }
 
       // noinspection JSUnusedAssignment
