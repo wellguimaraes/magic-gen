@@ -121,11 +121,13 @@ async function runGenerator(config) {
     if (!filePath) return
 
     fs.ensureFileSync(filePath)
-    fs.writeFileSync(filePath, prettier.format(content, { filepath: filePath }), {
-      encoding: 'utf8',
-    })
 
-    console.log(`Created ${filePath}`)
+    prettier.resolveConfig(process.cwd()).then(options => {
+      const formatted = prettier.format(content, { ...options, filepath: filePath })
+      fs.writeFileSync(filePath, formatted, { encoding: 'utf8' })
+
+      console.log(`Created ${filePath}`)
+    })
   })
 }
 
